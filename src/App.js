@@ -1,5 +1,6 @@
 import { Canvas, extend, useThree } from '@react-three/fiber'
 import { OrbitControls } from 'three-stdlib'
+import { useRef } from 'react'
 
 extend({ OrbitControls })
 
@@ -16,17 +17,25 @@ function App() {
 const Scene = () => {
   const {
     camera,
-    gl: { domElement },
+    gl: { domElement, setClearColor },
   } = useThree()
+  const lightRef = useRef()
+  setClearColor('#000000')
+
   return (
     <>
       <orbitControls args={[camera, domElement]} />
+
       <mesh>
         <boxGeometry />
         <meshPhongMaterial color="red" />
-        <ambientLight intensity={0.4} />
-        <directionalLight position={[0, 0, 5]} />
       </mesh>
+      <mesh position={[0, 0, -8]}>
+        <sphereGeometry args={[0.5]} />
+        <meshPhongMaterial color="red" />
+      </mesh>
+      <directionalLight ref={lightRef} position={[0, 0, -5]} />
+      {lightRef.current && <directionalLightHelper args={[lightRef.current]} />}
     </>
   )
 }
