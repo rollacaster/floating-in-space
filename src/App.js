@@ -1,8 +1,7 @@
-import { Canvas, extend, useThree } from '@react-three/fiber'
-import { OrbitControls } from 'three-stdlib'
+import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { useRef } from 'react'
-
-extend({ OrbitControls })
+import { OrbitControls, Html } from '@react-three/drei'
+import { useSpring, animated } from 'react-spring'
 
 function App() {
   return (
@@ -15,27 +14,37 @@ function App() {
 }
 
 const Scene = () => {
-  const {
-    camera,
-    gl: { domElement, setClearColor },
-  } = useThree()
-  const lightRef = useRef()
-  setClearColor('#000000')
+  const { clock } = useThree()
+  const cube = useRef()
+  const [{ t }, api] = useSpring(() => ({
+    t: clock.getElapsedTime(),
+  }))
 
+  useFrame(({ clock }) => {
+    const et = clock.getElapsedTime()
+    api({ t: clock.getElapsedTime() })
+    cube.current.position.y = Math.sin(et / 2) * 1
+    cube.current.rotation.x = Math.sin(et / 3) / 10
+    cube.current.rotation.y = Math.cos(et / 2) / 10
+    cube.current.rotation.z = Math.sin(et / 3) / 10
+  })
   return (
     <>
-      <orbitControls args={[camera, domElement]} />
+      <Html calculatePosition={() => [10, 10]}>
+        <svg>
+          <animated.text x={0} y={20}>
+            {t.to((x) => x.toFixed(0))}
+          </animated.text>
+        </svg>
+      </Html>
 
-      <mesh>
+      <ambientLight intensity={0.3} />
+      <mesh ref={cube}>
         <boxGeometry />
         <meshPhongMaterial color="red" />
       </mesh>
-      <mesh position={[0, 0, -8]}>
-        <sphereGeometry args={[0.5]} />
-        <meshPhongMaterial color="red" />
-      </mesh>
-      <directionalLight ref={lightRef} position={[0, 0, -5]} />
-      {lightRef.current && <directionalLightHelper args={[lightRef.current]} />}
+      <OrbitControls />
+      <directionalLight position={[0, 0, 1]} />
     </>
   )
 }
